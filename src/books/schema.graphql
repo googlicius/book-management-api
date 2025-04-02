@@ -1,0 +1,35 @@
+type Book {
+  id: ID!
+  title: String!
+  description: String
+  publishedAt: DateTime!
+  author: Author!
+  authorId: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input CreateBookInput {
+  title: String!
+  description: String
+  publishedAt: DateTime!
+  authorId: String!
+}
+
+input UpdateBookInput {
+  title: String
+  description: String
+  publishedAt: DateTime
+  authorId: String
+}
+
+extend type Query {
+  books: [Book!]!
+  book(id: ID!): Book
+}
+
+extend type Mutation {
+  createBook(createBookInput: CreateBookInput!): Book!
+  updateBook(id: ID!, updateBookInput: UpdateBookInput!): Book!
+  removeBook(id: ID!): Book!
+}

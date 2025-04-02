@@ -6,7 +6,6 @@ import { VpcStack } from './vpc-stack';
 
 export class DatabaseStack extends cdk.Stack {
   public readonly database: rds.DatabaseInstance;
-  public readonly databaseSecret: rds.DatabaseSecret;
 
   constructor(scope: Construct, id: string, vpcStack: VpcStack, props?: cdk.StackProps) {
     super(scope, id, props);

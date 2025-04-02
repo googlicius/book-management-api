@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+
+When generating or editing files, should add a blank line at the end of file.
