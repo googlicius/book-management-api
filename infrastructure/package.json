@@ -1,0 +1,19 @@
+{
+  "name": "book-management-infrastructure",
+  "version": "1.0.0",
+  "description": "Infrastructure code for Book Management API",
+  "main": "lib/infrastructure-stack.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.124.0",
+    "constructs": "^10.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "typescript": "^5.3.3"
+  }
+} 
