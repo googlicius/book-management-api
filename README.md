@@ -1,98 +1,191 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Book Management API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A GraphQL API for managing books, built with NestJS and deployed on AWS.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Prerequisites
 
-## Description
+- Node.js (v18 or later)
+- npm
+- AWS CLI configured with appropriate credentials
+- AWS CDK CLI (`npm install -g aws-cdk`)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Project Structure
 
-## Project setup
-
-```bash
-$ pnpm install
+```
+.
+├── src/               # NestJS API source code
+├── test/             # Test files
+├── infrastructure/   # AWS CDK infrastructure
+│   ├── lib/         # CDK stack definitions
+│   ├── bin/         # CDK app entry point
+│   └── package.json # Infrastructure dependencies
+└── package.json     # API dependencies
 ```
 
-## Compile and run the project
+## Local Development
 
+1. Install dependencies:
 ```bash
-# development
-$ pnpm run start
+# Install API dependencies
+npm install
 
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+# Install infrastructure dependencies
+cd infrastructure
+npm install
+cd ..
 ```
 
-## Run tests
-
+2. Set up environment variables:
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+cp .env.example .env
+# Edit .env with your local configuration
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+3. Start the development server:
 ```bash
-$ pnpm install -g mau
-$ mau deploy
+npm run dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+The API will be available at `http://localhost:3000/graphql`
 
-## Resources
+## Infrastructure Setup
 
-Check out a few resources that may come in handy when working with NestJS:
+The project uses AWS CDK to manage infrastructure. The infrastructure is split into multiple stacks:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- `VpcStack`: VPC and networking components
+- `DatabaseStack`: RDS PostgreSQL database
+- `InfrastructureStack`: ECS Cluster, ECR Repository, and ALB
+- `ApplicationStack`: ECS Service and application deployment
 
-## Support
+### Deploy Infrastructure
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+1. Bootstrap CDK (first time only):
+```bash
+cd infrastructure
+npx cdk bootstrap
+```
 
-## Stay in touch
+2. Deploy all stacks:
+```bash
+npx cdk deploy --all
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Or deploy individual stacks:
+```bash
+# Deploy VPC first
+npx cdk deploy BookManagementVpcStack
 
-## License
+# Deploy database
+npx cdk deploy BookManagementDatabaseStack
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+# Deploy infrastructure
+npx cdk deploy BookManagementInfrastructureStack
+
+# Deploy application
+npx cdk deploy BookManagementApplicationStack
+```
+
+### Destroy Infrastructure
+
+To clean up all resources:
+```bash
+cdk destroy --all
+```
+
+Or destroy individual stacks:
+```bash
+cdk destroy BookManagementApplicationStack
+cdk destroy BookManagementInfrastructureStack
+cdk destroy BookManagementDatabaseStack
+cdk destroy BookManagementVpcStack
+```
+
+## Database Migrations
+
+For local development, update your `.env` file with the correct `DATABASE_URL` value.
+
+### Creating New Migrations
+
+To create a new migration after changing the Prisma schema:
+
+```bash
+# Create a new migration
+npx prisma migrate dev --name your_migration_name
+```
+
+## Application Deployment
+
+1. Build the application:
+```bash
+npm run build
+```
+
+2. Build and push Docker image:
+```bash
+# Get the ECR repository URI from CDK outputs
+aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin <ECR_REPOSITORY_URI>
+
+# Build and tag the image
+docker build -t book-management-api .
+docker tag book-management-api:latest <ECR_REPOSITORY_URI>:latest
+
+# Push the image
+docker push <ECR_REPOSITORY_URI>:latest
+```
+
+3. Deploy the application:
+```bash
+cd infrastructure
+npx cdk deploy BookManagementApplicationStack
+```
+
+## Environment Variables
+
+The application requires the following environment variables:
+
+```env
+# Database Configuration
+DATABASE_HOST=
+DATABASE_PORT=
+DATABASE_USERNAME=
+DATABASE_PASSWORD=
+DATABASE_NAME=
+
+# Or
+DATABASE_URL=
+
+# Application Configuration
+NODE_ENV=production
+```
+
+These are automatically configured in the ECS service using AWS Secrets Manager.
+
+## Monitoring and Logs
+
+- Application logs are available in CloudWatch Logs
+- Container insights are enabled for the ECS cluster
+- Health checks are configured for the application
+
+## Security
+
+- The database is deployed in private subnets
+- Application load balancer is internet-facing
+- All sensitive data is stored in AWS Secrets Manager
+- Security groups are configured to restrict access
+
+## Troubleshooting
+
+1. Check ECS service status:
+```bash
+aws ecs describe-services --cluster BookManagementCluster --services BookManagementService
+```
+
+2. View container logs:
+```bash
+aws logs get-log-events --log-group-name /ecs/BookManagementService
+```
+
+3. Check ALB health:
+```bash
+aws elbv2 describe-target-health --target-group-arn <TARGET_GROUP_ARN>
+```

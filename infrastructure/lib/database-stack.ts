@@ -48,4 +48,4 @@ export class DatabaseStack extends cdk.Stack {
       description: 'Database name',
     });
   }
-} 
+}

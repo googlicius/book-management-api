@@ -23,12 +23,12 @@ input UpdateBookInput {
   authorId: String
 }
 
-extend type Query {
+type Query {
   books: [Book!]!
   book(id: ID!): Book
 }
 
-extend type Mutation {
+type Mutation {
   createBook(createBookInput: CreateBookInput!): Book!
   updateBook(id: ID!, updateBookInput: UpdateBookInput!): Book!
   removeBook(id: ID!): Book!
