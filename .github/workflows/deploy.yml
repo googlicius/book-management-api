@@ -114,6 +114,10 @@ jobs:
         working-directory: infrastructure
         run: npm run build
 
-      - name: Deploy application stack
+      - name: Check CDK Bootstrap status
         working-directory: infrastructure
-        run: npx cdk deploy BookManagementApplicationStack --require-approval never
+        run: npx cdk doctor
+
+      - name: Deploy application stack without dependencies
+        working-directory: infrastructure
+        run: npx cdk deploy BookManagementApplicationStack --no-previous-parameters --exclusively --require-approval never
