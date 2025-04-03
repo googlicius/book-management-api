@@ -5,6 +5,7 @@ import { InfrastructureStack } from '../lib/infrastructure-stack';
 import { DatabaseStack } from '../lib/database-stack';
 import { VpcStack } from '../lib/vpc-stack';
 import { ApplicationStack } from '../lib/application-stack';
+import { GithubActionsRoleStack } from '../lib/github-actions-role-stack';
 
 const app = new cdk.App();
 
@@ -12,6 +13,23 @@ const env = {
   account: process.env.CDK_DEFAULT_ACCOUNT || process.env.AWS_ACCOUNT_ID,
   region: process.env.CDK_DEFAULT_REGION || process.env.AWS_REGION || 'ap-southeast-1',
 };
+
+// Read repository info from environment variables or CDK context
+const repositoryOwner = process.env.GITHUB_REPO_OWNER ||
+  app.node.tryGetContext('repositoryOwner') ||
+  'your-github-org';
+
+const repositoryName = process.env.GITHUB_REPO_NAME ||
+  app.node.tryGetContext('repositoryName') ||
+  'book-management-graphql';
+
+// Create the GitHub Actions IAM role stack
+new GithubActionsRoleStack(app, 'BookManagementGithubActionsRoleStack', {
+  env,
+  description: 'IAM role for GitHub Actions to deploy Book Management API',
+  repositoryOwner,
+  repositoryName,
+});
 
 // Create the VPC stack first
 const vpcStack = new VpcStack(app, 'BookManagementVpcStack', {
