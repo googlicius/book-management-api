@@ -36,26 +36,11 @@ jobs:
       - name: Build application
         run: npm run build
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts
-          path: |
-            dist
-            prisma
-            package.json
-            package-lock.json
-          
   build-and-push-image:
     needs: build-and-test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-artifacts
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
