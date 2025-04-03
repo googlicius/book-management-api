@@ -71,6 +71,19 @@ export class GithubActionsRoleStack extends cdk.Stack {
       })
     );
 
+    // Add SSM permissions needed for CDK bootstrap
+    this.role.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'ssm:GetParameter',
+          'ssm:GetParameters',
+          'ssm:DescribeParameters'
+        ],
+        resources: ['*'],
+      })
+    );
+
     // Add permissions for ECS
     this.role.addToPolicy(
       new iam.PolicyStatement({
