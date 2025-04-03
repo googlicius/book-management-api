@@ -53,6 +53,24 @@ export class GithubActionsRoleStack extends cdk.Stack {
       })
     );
 
+    // Add EC2 permissions needed for deployment
+    this.role.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'ec2:DescribeAvailabilityZones',
+          'ec2:DescribeVpcs',
+          'ec2:DescribeSubnets',
+          'ec2:DescribeSecurityGroups',
+          'ec2:DescribeInternetGateways',
+          'ec2:DescribeNatGateways',
+          'ec2:DescribeRouteTables',
+          'ec2:DescribeDhcpOptions'
+        ],
+        resources: ['*'],
+      })
+    );
+
     // Add permissions for ECS
     this.role.addToPolicy(
       new iam.PolicyStatement({
@@ -61,7 +79,6 @@ export class GithubActionsRoleStack extends cdk.Stack {
           'ecs:*',
           'elasticloadbalancing:*',
           'ec2:CreateSecurityGroup',
-          'ec2:DescribeSecurityGroups',
           'ec2:AuthorizeSecurityGroupIngress',
           'ec2:DescribeSubnets',
           'ec2:DescribeVpcs',
