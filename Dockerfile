@@ -3,11 +3,13 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+# Copy package files first for better caching
 COPY package*.json ./
 RUN npm ci
 
+# Now copy the rest of the application code
 COPY . .
-RUN npm run generate:types
+RUN npx prisma generate
 RUN npm run build
 
 # Production stage

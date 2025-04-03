@@ -24,7 +24,19 @@ jobs:
           node-version: '18'
           cache: 'npm'
 
+      - name: Cache node modules
+        uses: actions/cache@v3
+        id: npm-cache
+        with:
+          path: |
+            node_modules
+            ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
         run: npm ci
 
       - name: Generate Prisma client
@@ -76,15 +88,27 @@ jobs:
           cache: 'npm'
           cache-dependency-path: infrastructure/package-lock.json
 
+      - name: Cache infrastructure node modules
+        uses: actions/cache@v3
+        id: infra-npm-cache
+        with:
+          path: |
+            infrastructure/node_modules
+            ~/.npm
+          key: ${{ runner.os }}-node-infra-${{ hashFiles('infrastructure/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-infra-
+
+      - name: Install CDK dependencies
+        working-directory: infrastructure
+        if: steps.infra-npm-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-
-      - name: Install CDK dependencies
-        working-directory: infrastructure
-        run: npm ci
 
       - name: Build CDK code
         working-directory: infrastructure
