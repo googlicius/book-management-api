@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecs_patterns from 'aws-cdk-lib/aws-ecs-patterns';
+import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import { Construct } from 'constructs';
 import { DatabaseStack } from './database-stack';
 import { VpcStack } from './vpc-stack';
@@ -42,6 +43,9 @@ export class ApplicationStack extends cdk.Stack {
       assignPublicIp: true,
       securityGroups: [vpcStack.fargateSecurityGroup],
       loadBalancer: infrastructureStack.alb,
+      protocol: elbv2.ApplicationProtocol.HTTPS,
+      certificate: infrastructureStack.certificate,
+      redirectHTTP: true,
     });
 
     // Configure health check for the target group

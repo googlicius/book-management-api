@@ -2,16 +2,23 @@ import * as cdk from 'aws-cdk-lib';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import { Construct } from 'constructs';
 import { VpcStack } from './vpc-stack';
+import { getCertificateArn } from './config';
 
 export class InfrastructureStack extends cdk.Stack {
   public readonly cluster: ecs.Cluster;
   public readonly repository: ecr.Repository;
   public readonly alb: elbv2.ApplicationLoadBalancer;
+  public readonly certificate: acm.ICertificate;
 
   constructor(scope: Construct, id: string, vpcStack: VpcStack, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    // Import existing certificate
+    const certificateArn = getCertificateArn();
+    this.certificate = acm.Certificate.fromCertificateArn(this, 'Certificate', certificateArn);
 
     // Create ECS Cluster
     this.cluster = new ecs.Cluster(this, 'BookManagementCluster', {
@@ -55,6 +62,13 @@ export class InfrastructureStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'ECRRepositoryURI', {
       value: this.repository.repositoryUri,
       description: 'ECR Repository URI',
+    });
+
+    // Output the certificate ARN
+    new cdk.CfnOutput(this, 'CertificateARN', {
+      value: this.certificate.certificateArn,
+      description: 'Certificate ARN',
+      exportName: 'BookManagementCertificateARN',
     });
   }
 }

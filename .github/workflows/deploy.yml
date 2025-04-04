@@ -120,4 +120,6 @@ jobs:
 
       - name: Deploy application stack without dependencies
         working-directory: infrastructure
+        env:
+          CERTIFICATE_ARN: ${{ secrets.CERTIFICATE_ARN }}
         run: npx cdk deploy BookManagementApplicationStack --no-previous-parameters --exclusively --require-approval never

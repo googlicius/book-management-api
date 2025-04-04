@@ -10,10 +10,11 @@
   },
   "dependencies": {
     "aws-cdk-lib": "^2.124.0",
-    "constructs": "^10.3.0"
+    "constructs": "^10.3.0",
+    "dotenv": "^16.3.1"
   },
   "devDependencies": {
     "@types/node": "^20.11.24",
     "typescript": "^5.3.3"
   }
-} 
+}
