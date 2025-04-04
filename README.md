@@ -56,6 +56,7 @@ The project uses AWS CDK to manage infrastructure. The infrastructure is split i
 - `DatabaseStack`: RDS PostgreSQL database
 - `InfrastructureStack`: ECS Cluster, ECR Repository, and ALB
 - `ApplicationStack`: ECS Service and application deployment
+- `GithubActionsRoleStack`: IAM role for GitHub Actions CI/CD
 
 ### Deploy Infrastructure
 
@@ -83,6 +84,33 @@ npx cdk deploy BookManagementInfrastructureStack
 
 # Deploy application
 npx cdk deploy BookManagementApplicationStack
+
+# Deploy GitHub Actions IAM role
+npx cdk deploy BookManagementGithubActionsRoleStack --context repositoryOwner=your-github-username --context repositoryName=your-repo-name
+```
+
+### GitHub Actions CI/CD Setup
+
+The project includes a GitHub Actions workflow for continuous deployment:
+
+1. Deploy the GitHub Actions IAM role:
+```bash
+cd infrastructure
+npx cdk deploy BookManagementGithubActionsRoleStack --context repositoryOwner=your-github-username --context repositoryName=your-repo-name
+```
+
+2. Add the IAM role ARN to your GitHub repository secrets:
+   - Go to your GitHub repository → Settings → Secrets and Variables → Actions
+   - Add a new repository secret with name `AWS_ROLE_ARN`
+   - Use the ARN output from the stack deployment
+
+3. Push to your main branch to trigger the deployment workflow.
+
+You can also provide the repository information through environment variables:
+```bash
+export GITHUB_REPO_OWNER="your-github-username"
+export GITHUB_REPO_NAME="your-repo-name"
+npx cdk deploy BookManagementGithubActionsRoleStack
 ```
 
 ### Destroy Infrastructure
@@ -98,6 +126,7 @@ cdk destroy BookManagementApplicationStack
 cdk destroy BookManagementInfrastructureStack
 cdk destroy BookManagementDatabaseStack
 cdk destroy BookManagementVpcStack
+cdk destroy BookManagementGithubActionsRoleStack
 ```
 
 ## Database Migrations
@@ -114,6 +143,8 @@ npx prisma migrate dev --name your_migration_name
 ```
 
 ## Application Deployment
+
+### Manual Deployment
 
 1. Build the application:
 ```bash
@@ -138,6 +169,18 @@ docker push <ECR_REPOSITORY_URI>:latest
 cd infrastructure
 npx cdk deploy BookManagementApplicationStack
 ```
+
+### Automated Deployment with GitHub Actions
+
+The project includes a GitHub Actions workflow that:
+1. Builds and tests the application
+2. Builds and pushes a Docker image to Amazon ECR
+3. Deploys the application stack using AWS CDK
+
+To use it:
+1. Ensure the GitHub Actions IAM role is deployed
+2. Add the IAM role ARN as a GitHub secret named `AWS_ROLE_ARN`
+3. Push to the main branch to trigger the workflow
 
 ## Environment Variables
 
@@ -172,6 +215,7 @@ These are automatically configured in the ECS service using AWS Secrets Manager.
 - Application load balancer is internet-facing
 - All sensitive data is stored in AWS Secrets Manager
 - Security groups are configured to restrict access
+- GitHub Actions uses OIDC federation for secure AWS authentication
 
 ## Troubleshooting
 
@@ -189,3 +233,8 @@ aws logs get-log-events --log-group-name /ecs/BookManagementService
 ```bash
 aws elbv2 describe-target-health --target-group-arn <TARGET_GROUP_ARN>
 ```
+
+4. For GitHub Actions deployment issues, check:
+   - GitHub repository secrets are correctly set up
+   - IAM role has the necessary permissions
+   - AWS region settings in the workflow file
