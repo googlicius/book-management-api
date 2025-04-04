@@ -12,6 +12,8 @@ export class InfrastructureStack extends cdk.Stack {
   public readonly repository: ecr.Repository;
   public readonly alb: elbv2.ApplicationLoadBalancer;
   public readonly certificate: acm.ICertificate;
+  public readonly targetGroup: elbv2.ApplicationTargetGroup;
+  public readonly httpsListener: elbv2.ApplicationListener;
 
   constructor(scope: Construct, id: string, vpcStack: VpcStack, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -37,6 +39,45 @@ export class InfrastructureStack extends cdk.Stack {
       vpc: vpcStack.vpc,
       internetFacing: true,
       securityGroup: vpcStack.albSecurityGroup,
+    });
+
+    // Create Target Group
+    this.targetGroup = new elbv2.ApplicationTargetGroup(this, 'ApiTargetGroup', {
+      vpc: vpcStack.vpc,
+      port: 3000,
+      protocol: elbv2.ApplicationProtocol.HTTP,
+      targetType: elbv2.TargetType.IP,
+      healthCheck: {
+        path: '/health',
+        healthyHttpCodes: '200',
+        healthyThresholdCount: 2,
+        unhealthyThresholdCount: 2,
+        timeout: cdk.Duration.seconds(5),
+        interval: cdk.Duration.seconds(30),
+      },
+    });
+
+    // Create HTTPS Listener
+    this.httpsListener = new elbv2.ApplicationListener(this, 'HttpsListener', {
+      loadBalancer: this.alb,
+      port: 443,
+      protocol: elbv2.ApplicationProtocol.HTTPS,
+      certificates: [this.certificate],
+      defaultTargetGroups: [this.targetGroup],
+      // Use SNI for multi-domain SSL support
+      sslPolicy: elbv2.SslPolicy.RECOMMENDED,
+    });
+
+    // Create HTTP Listener that redirects to HTTPS
+    new elbv2.ApplicationListener(this, 'HttpListener', {
+      loadBalancer: this.alb,
+      port: 80,
+      protocol: elbv2.ApplicationProtocol.HTTP,
+      defaultAction: elbv2.ListenerAction.redirect({
+        protocol: 'HTTPS',
+        port: '443',
+        permanent: true,
+      }),
     });
 
     // Export ALB DNS and Canonical Hosted Zone ID for the application stack
@@ -69,6 +110,13 @@ export class InfrastructureStack extends cdk.Stack {
       value: this.certificate.certificateArn,
       description: 'Certificate ARN',
       exportName: 'BookManagementCertificateARN',
+    });
+
+    // Output the target group ARN
+    new cdk.CfnOutput(this, 'TargetGroupARN', {
+      value: this.targetGroup.targetGroupArn,
+      description: 'Target Group ARN',
+      exportName: 'BookManagementTargetGroupARN',
     });
   }
 }

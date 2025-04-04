@@ -1,8 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
-import * as ecs_patterns from 'aws-cdk-lib/aws-ecs-patterns';
-import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import { Construct } from 'constructs';
 import { DatabaseStack } from './database-stack';
 import { VpcStack } from './vpc-stack';
@@ -19,48 +17,54 @@ export class ApplicationStack extends cdk.Stack {
   ) {
     super(scope, id, props);
 
-    // Create Fargate Service
-    const fargateService = new ecs_patterns.ApplicationLoadBalancedFargateService(this, 'BookManagementService', {
-      cluster: infrastructureStack.cluster,
+    // Create the Fargate Task Definition
+    const taskDefinition = new ecs.FargateTaskDefinition(this, 'BookManagementTaskDef', {
       cpu: 256,
       memoryLimitMiB: 512,
-      desiredCount: 1,
-      taskImageOptions: {
-        image: ecs.ContainerImage.fromEcrRepository(infrastructureStack.repository),
-        containerPort: 3000,
-        environment: {
-          NODE_ENV: 'production',
-        },
-        secrets: {
-          DATABASE_HOST: ecs.Secret.fromSecretsManager(databaseStack.database.secret!, 'host'),
-          DATABASE_PORT: ecs.Secret.fromSecretsManager(databaseStack.database.secret!, 'port'),
-          DATABASE_USERNAME: ecs.Secret.fromSecretsManager(databaseStack.database.secret!, 'username'),
-          DATABASE_PASSWORD: ecs.Secret.fromSecretsManager(databaseStack.database.secret!, 'password'),
-          DATABASE_NAME: ecs.Secret.fromSecretsManager(databaseStack.database.secret!, 'dbname'),
-        },
+    });
+
+    // Add container to the task definition
+    const container = taskDefinition.addContainer('BookManagementContainer', {
+      image: ecs.ContainerImage.fromEcrRepository(infrastructureStack.repository),
+      environment: {
+        NODE_ENV: 'production',
       },
-      publicLoadBalancer: false,
-      assignPublicIp: true,
+      secrets: {
+        DATABASE_HOST: ecs.Secret.fromSecretsManager(databaseStack.database.secret!, 'host'),
+        DATABASE_PORT: ecs.Secret.fromSecretsManager(databaseStack.database.secret!, 'port'),
+        DATABASE_USERNAME: ecs.Secret.fromSecretsManager(databaseStack.database.secret!, 'username'),
+        DATABASE_PASSWORD: ecs.Secret.fromSecretsManager(databaseStack.database.secret!, 'password'),
+        DATABASE_NAME: ecs.Secret.fromSecretsManager(databaseStack.database.secret!, 'dbname'),
+      },
+      logging: ecs.LogDrivers.awsLogs({ 
+        streamPrefix: 'book-management-api' 
+      }),
+    });
+
+    // Add port mapping to the container
+    container.addPortMappings({
+      containerPort: 3000,
+      hostPort: 3000,
+      protocol: ecs.Protocol.TCP,
+    });
+
+    // Create the Fargate Service
+    const fargateService = new ecs.FargateService(this, 'BookManagementService', {
+      cluster: infrastructureStack.cluster,
+      taskDefinition,
+      desiredCount: 1,
       securityGroups: [vpcStack.fargateSecurityGroup],
-      loadBalancer: infrastructureStack.alb,
-      protocol: elbv2.ApplicationProtocol.HTTPS,
-      certificate: infrastructureStack.certificate,
-      redirectHTTP: true,
+      assignPublicIp: true,
     });
 
-    // Configure health check for the target group
-    const targetGroup = fargateService.targetGroup;
-    targetGroup.configureHealthCheck({
-      path: '/health',
-      healthyHttpCodes: '200',
-      healthyThresholdCount: 2,
-      unhealthyThresholdCount: 2,
-      timeout: cdk.Duration.seconds(5),
-      interval: cdk.Duration.seconds(30),
-    });
+    // Register the Fargate service with the ALB target group
+    fargateService.attachToApplicationTargetGroup(infrastructureStack.targetGroup);
 
-    // Add auto scaling
-    const scaling = fargateService.service.autoScaleTaskCount({
+    // Allow the Fargate service to access the RDS instance
+    databaseStack.database.connections.allowFrom(vpcStack.fargateSecurityGroup, ec2.Port.tcp(5432));
+
+    // Set up auto scaling
+    const scaling = fargateService.autoScaleTaskCount({
       minCapacity: 1,
       maxCapacity: 4,
     });
@@ -71,10 +75,6 @@ export class ApplicationStack extends cdk.Stack {
       scaleOutCooldown: cdk.Duration.seconds(60),
     });
 
-    // Allow the Fargate service to access the RDS instance
-    databaseStack.database.connections.allowFrom(vpcStack.fargateSecurityGroup, ec2.Port.tcp(5432));
-
-    // Output the service URL
     new cdk.CfnOutput(this, 'ServiceURL', {
       value: infrastructureStack.alb.loadBalancerDnsName,
       description: 'Service URL',

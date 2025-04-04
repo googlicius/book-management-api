@@ -43,22 +43,39 @@ For automated deployments using GitHub Actions:
 1. Go to your GitHub repository settings
 2. Navigate to "Secrets and variables" → "Actions"
 3. Select the "Variables" tab
-4. Add the following repository variable:
+4. Add the variable:
    - `CERTIFICATE_ARN`: The ARN of your ACM certificate
 
 The deployment workflow will automatically use this variable when deploying the stack.
 
 ## What happens during deployment
 
-The CDK stack will:
-- Use your existing ACM certificate for HTTPS
-- Configure the ALB with HTTPS listeners using the certificate
-- Set up automatic HTTP to HTTPS redirection
+The deployment will:
+
+1. Create Infrastructure Stack:
+   - Set up an ALB with both HTTP and HTTPS listeners
+   - Configure HTTPS using your certificate
+   - Create a target group for your application
+   - Set up HTTP to HTTPS redirection
+
+2. Create Application Stack:
+   - Create a Fargate service with your application
+   - Register the Fargate tasks with the ALB target group
+   - Configure auto-scaling based on CPU utilization
+
+## Accessing Your Application
+
+After deployment:
+
+1. You can immediately access your application using the ALB DNS name, but it will show certificate warnings because the certificate is for your domain, not the ALB DNS name.
+
+2. For proper HTTPS access, set up DNS records to point your domain to the ALB. See `DNS_SETUP.md` for detailed instructions.
 
 ## Troubleshooting
 
 - **Certificate not found**: Ensure your certificate ARN is correct and the certificate is in the same region as your deployment
 - **ALB health check failures**: Verify your service is responding correctly on the `/health` endpoint
+- **Deployment errors about existing listeners**: You may need to destroy existing stacks with `cdk destroy --all` before redeploying
 
 ## Security Considerations
 
