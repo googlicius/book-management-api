@@ -104,6 +104,12 @@ jobs:
         if: steps.infra-npm-cache.outputs.cache-hit != 'true'
         run: npm ci
 
+      - name: Install SOPS
+        run: |
+          wget -O sops https://github.com/mozilla/sops/releases/download/v3.7.3/sops-v3.7.3.linux
+          chmod +x sops
+          sudo mv sops /usr/local/bin/
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
