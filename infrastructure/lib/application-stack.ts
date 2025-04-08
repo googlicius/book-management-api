@@ -58,10 +58,7 @@ export class ApplicationStack extends cdk.Stack {
       taskDefinition,
       desiredCount: 1,
       securityGroups: [infrastructureStack.fargateSecurityGroup],
-      vpcSubnets: {
-        subnetType: ec2.SubnetType.PUBLIC,
-      },
-      assignPublicIp: false,
+      assignPublicIp: true,
     });
 
     // Register the Fargate service with the ALB target group
