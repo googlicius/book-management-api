@@ -59,7 +59,7 @@ export class ApplicationStack extends cdk.Stack {
       desiredCount: 1,
       securityGroups: [infrastructureStack.fargateSecurityGroup],
       vpcSubnets: {
-        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+        subnetType: ec2.SubnetType.PUBLIC,
       },
       assignPublicIp: false,
     });
