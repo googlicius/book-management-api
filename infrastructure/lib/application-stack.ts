@@ -1,9 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
-import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
-import { DatabaseStack } from './database-stack';
 import { InfrastructureStack } from './infrastructure-stack';
 import { secrets } from '../scripts/load-secrets';
 
@@ -21,20 +19,6 @@ export class ApplicationStack extends cdk.Stack {
       cpu: 256,
       memoryLimitMiB: 512,
     });
-
-    // Add ECR permissions to the task execution role
-    taskDefinition.addToExecutionRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: [
-          'ecr:GetAuthorizationToken',
-          'ecr:BatchCheckLayerAvailability',
-          'ecr:GetDownloadUrlForLayer',
-          'ecr:BatchGetImage',
-        ],
-        resources: ['*'],
-      })
-    );
 
     // Add container to the task definition
     const container = taskDefinition.addContainer('BookManagementContainer', {
