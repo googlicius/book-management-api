@@ -4,9 +4,10 @@
   "description": "Infrastructure code for Book Management API",
   "main": "lib/infrastructure-stack.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run copy-files",
     "watch": "tsc -w",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "copy-files": "cp -r secrets dist && cp .sops.yaml dist"
   },
   "dependencies": {
     "aws-cdk-lib": "^2.124.0",
@@ -14,7 +15,9 @@
     "dotenv": "^16.3.1"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.11.24",
+    "js-yaml": "^4.1.0",
     "typescript": "^5.3.3"
   }
 }

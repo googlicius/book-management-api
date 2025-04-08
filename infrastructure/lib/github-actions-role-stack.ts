@@ -173,6 +173,20 @@ export class GithubActionsRoleStack extends cdk.Stack {
       })
     );
 
+    // Add KMS permissions for SOPS operations
+    this.role.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'kms:Decrypt',
+          'kms:Encrypt',
+          'kms:DescribeKey',
+          'kms:GenerateDataKey'
+        ],
+        resources: ['*'], // You might want to restrict this to specific KMS keys
+      })
+    );
+
     // Add Logs permissions
     this.role.addToPolicy(
       new iam.PolicyStatement({

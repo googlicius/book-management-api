@@ -15,7 +15,7 @@ export class DatabaseStack extends cdk.Stack {
       engine: rds.DatabaseInstanceEngine.postgres({ version: rds.PostgresEngineVersion.VER_14 }),
       vpc: vpcStack.vpc,
       vpcSubnets: {
-        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
       },
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MICRO), // Cost optimization
       allocatedStorage: 20,

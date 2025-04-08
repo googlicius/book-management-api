@@ -6,6 +6,7 @@ import { DatabaseStack } from '../lib/database-stack';
 import { VpcStack } from '../lib/vpc-stack';
 import { ApplicationStack } from '../lib/application-stack';
 import { GithubActionsRoleStack } from '../lib/github-actions-role-stack';
+import { KmsStack } from '../lib/kms-stack';
 
 const app = new cdk.App();
 
@@ -37,6 +38,12 @@ const vpcStack = new VpcStack(app, 'BookManagementVpcStack', {
   description: 'VPC infrastructure for Book Management API',
 });
 
+// Create the KMS stack
+new KmsStack(app, 'BookManagementKmsStack', {
+  env,
+  description: 'KMS key for SOPS encryption',
+});
+
 // Create the database stack that depends on the VPC stack
 const databaseStack = new DatabaseStack(app, 'BookManagementDatabaseStack', vpcStack, {
   env,
@@ -50,7 +57,7 @@ const infrastructureStack = new InfrastructureStack(app, 'BookManagementInfrastr
 });
 
 // Create the application stack that depends on VPC, database, and infrastructure stacks
-new ApplicationStack(app, 'BookManagementApplicationStack', vpcStack, databaseStack, infrastructureStack, {
+new ApplicationStack(app, 'BookManagementApplicationStack', infrastructureStack, {
   env,
   description: 'Application deployment for Book Management API',
 });

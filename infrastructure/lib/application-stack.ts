@@ -1,17 +1,14 @@
 import * as cdk from 'aws-cdk-lib';
-import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import { Construct } from 'constructs';
 import { DatabaseStack } from './database-stack';
-import { VpcStack } from './vpc-stack';
 import { InfrastructureStack } from './infrastructure-stack';
+import { secrets } from '../scripts/load-secrets';
 
 export class ApplicationStack extends cdk.Stack {
   constructor(
     scope: Construct,
     id: string,
-    vpcStack: VpcStack,
-    databaseStack: DatabaseStack,
     infrastructureStack: InfrastructureStack,
     props?: cdk.StackProps
   ) {
@@ -26,18 +23,9 @@ export class ApplicationStack extends cdk.Stack {
     // Add container to the task definition
     const container = taskDefinition.addContainer('BookManagementContainer', {
       image: ecs.ContainerImage.fromEcrRepository(infrastructureStack.repository),
-      environment: {
-        NODE_ENV: 'production',
-      },
-      secrets: {
-        DATABASE_HOST: ecs.Secret.fromSecretsManager(databaseStack.database.secret!, 'host'),
-        DATABASE_PORT: ecs.Secret.fromSecretsManager(databaseStack.database.secret!, 'port'),
-        DATABASE_USERNAME: ecs.Secret.fromSecretsManager(databaseStack.database.secret!, 'username'),
-        DATABASE_PASSWORD: ecs.Secret.fromSecretsManager(databaseStack.database.secret!, 'password'),
-        DATABASE_NAME: ecs.Secret.fromSecretsManager(databaseStack.database.secret!, 'dbname'),
-      },
-      logging: ecs.LogDrivers.awsLogs({ 
-        streamPrefix: 'book-management-api' 
+      environment: secrets,
+      logging: ecs.LogDrivers.awsLogs({
+        streamPrefix: 'book-management-api'
       }),
     });
 
@@ -53,15 +41,12 @@ export class ApplicationStack extends cdk.Stack {
       cluster: infrastructureStack.cluster,
       taskDefinition,
       desiredCount: 1,
-      securityGroups: [vpcStack.fargateSecurityGroup],
-      assignPublicIp: true,
+      securityGroups: [infrastructureStack.fargateSecurityGroup],
+      // assignPublicIp: true,
     });
 
     // Register the Fargate service with the ALB target group
     fargateService.attachToApplicationTargetGroup(infrastructureStack.targetGroup);
-
-    // Allow the Fargate service to access the RDS instance
-    databaseStack.database.connections.allowFrom(vpcStack.fargateSecurityGroup, ec2.Port.tcp(5432));
 
     // Set up auto scaling
     const scaling = fargateService.autoScaleTaskCount({

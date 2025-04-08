@@ -3,6 +3,7 @@ import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
 import { VpcStack } from './vpc-stack';
 import { getCertificateArn } from './config';
@@ -14,6 +15,8 @@ export class InfrastructureStack extends cdk.Stack {
   public readonly certificate: acm.ICertificate;
   public readonly targetGroup: elbv2.ApplicationTargetGroup;
   public readonly httpsListener: elbv2.ApplicationListener;
+  public readonly fargateSecurityGroup: ec2.SecurityGroup;
+  public readonly albSecurityGroup: ec2.SecurityGroup;
 
   constructor(scope: Construct, id: string, vpcStack: VpcStack, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -21,6 +24,34 @@ export class InfrastructureStack extends cdk.Stack {
     // Import existing certificate
     const certificateArn = getCertificateArn();
     this.certificate = acm.Certificate.fromCertificateArn(this, 'Certificate', certificateArn);
+
+    // Create security group for Fargate service
+    this.fargateSecurityGroup = new ec2.SecurityGroup(this, 'FargateServiceSecurityGroup', {
+      vpc: vpcStack.vpc,
+      description: 'Security group for Fargate service',
+      allowAllOutbound: true,
+    });
+
+    // Create security group for ALB
+    this.albSecurityGroup = new ec2.SecurityGroup(this, 'ALBSecurityGroup', {
+      vpc: vpcStack.vpc,
+      description: 'Security group for Application Load Balancer',
+      allowAllOutbound: true,
+    });
+
+    // Allow inbound HTTP traffic to ALB
+    this.albSecurityGroup.addIngressRule(
+      ec2.Peer.anyIpv4(),
+      ec2.Port.tcp(80),
+      'Allow HTTP traffic'
+    );
+
+    // Allow inbound HTTPS traffic to ALB
+    this.albSecurityGroup.addIngressRule(
+      ec2.Peer.anyIpv4(),
+      ec2.Port.tcp(443),
+      'Allow HTTPS traffic'
+    );
 
     // Create ECS Cluster
     this.cluster = new ecs.Cluster(this, 'BookManagementCluster', {
@@ -38,7 +69,7 @@ export class InfrastructureStack extends cdk.Stack {
     this.alb = new elbv2.ApplicationLoadBalancer(this, 'ALB', {
       vpc: vpcStack.vpc,
       internetFacing: true,
-      securityGroup: vpcStack.albSecurityGroup,
+      securityGroup: this.albSecurityGroup,
     });
 
     // Create Target Group
@@ -117,6 +148,17 @@ export class InfrastructureStack extends cdk.Stack {
       value: this.targetGroup.targetGroupArn,
       description: 'Target Group ARN',
       exportName: 'BookManagementTargetGroupARN',
+    });
+
+    // Output the security group IDs
+    new cdk.CfnOutput(this, 'FargateSecurityGroupId', {
+      value: this.fargateSecurityGroup.securityGroupId,
+      description: 'Fargate Service Security Group ID',
+    });
+
+    new cdk.CfnOutput(this, 'ALBSecurityGroupId', {
+      value: this.albSecurityGroup.securityGroupId,
+      description: 'ALB Security Group ID',
     });
   }
 }
