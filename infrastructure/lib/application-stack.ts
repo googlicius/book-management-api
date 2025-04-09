@@ -1,6 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
-import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import { Construct } from 'constructs';
 import { InfrastructureStack } from './infrastructure-stack';
 import { secrets } from '../scripts/load-secrets';
@@ -49,6 +49,7 @@ export class ApplicationStack extends cdk.Stack {
     infrastructureStack.httpsListener.addTargets('BookManagementServiceTarget', {
       port: 3000,
       targets: [fargateService],
+      protocol: elbv2.ApplicationProtocol.HTTP,
     });
 
     // Set up auto scaling
