@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
 import { InfrastructureStack } from './infrastructure-stack';
 import { secrets } from '../scripts/load-secrets';
@@ -42,7 +43,10 @@ export class ApplicationStack extends cdk.Stack {
       taskDefinition,
       desiredCount: 1,
       securityGroups: [infrastructureStack.fargateSecurityGroup],
-      assignPublicIp: true,
+      // assignPublicIp: true,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PUBLIC,
+      },
     });
 
     // Add the Fargate service as a target to the HTTPS listener
