@@ -13,6 +13,7 @@ export class KmsStack extends cdk.Stack {
       description: 'KMS key for SOPS encryption',
       enableKeyRotation: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
+      alias: 'alias/BookManagementSopsKey',
     });
 
     // Output the key ARN

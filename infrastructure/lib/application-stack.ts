@@ -1,6 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
-import * as iam from 'aws-cdk-lib/aws-iam';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
 import { InfrastructureStack } from './infrastructure-stack';
 import { secrets } from '../scripts/load-secrets';
@@ -42,7 +42,9 @@ export class ApplicationStack extends cdk.Stack {
       taskDefinition,
       desiredCount: 1,
       securityGroups: [infrastructureStack.fargateSecurityGroup],
-      assignPublicIp: true,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PUBLIC,
+      },
     });
 
     // Register the Fargate service with the ALB target group
