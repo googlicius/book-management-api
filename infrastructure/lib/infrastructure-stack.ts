@@ -72,29 +72,12 @@ export class InfrastructureStack extends cdk.Stack {
       securityGroup: this.albSecurityGroup,
     });
 
-    // Create Target Group
-    this.targetGroup = new elbv2.ApplicationTargetGroup(this, 'ApiTargetGroup', {
-      vpc: vpcStack.vpc,
-      port: 3000,
-      protocol: elbv2.ApplicationProtocol.HTTP,
-      targetType: elbv2.TargetType.IP,
-      healthCheck: {
-        path: '/health',
-        healthyHttpCodes: '200',
-        healthyThresholdCount: 2,
-        unhealthyThresholdCount: 2,
-        timeout: cdk.Duration.seconds(5),
-        interval: cdk.Duration.seconds(30),
-      },
-    });
-
     // Create HTTPS Listener
     this.httpsListener = new elbv2.ApplicationListener(this, 'HttpsListener', {
       loadBalancer: this.alb,
       port: 443,
       protocol: elbv2.ApplicationProtocol.HTTPS,
       certificates: [this.certificate],
-      defaultTargetGroups: [this.targetGroup],
       // Use SNI for multi-domain SSL support
       sslPolicy: elbv2.SslPolicy.RECOMMENDED,
     });
@@ -141,13 +124,6 @@ export class InfrastructureStack extends cdk.Stack {
       value: this.certificate.certificateArn,
       description: 'Certificate ARN',
       exportName: 'BookManagementCertificateARN',
-    });
-
-    // Output the target group ARN
-    new cdk.CfnOutput(this, 'TargetGroupARN', {
-      value: this.targetGroup.targetGroupArn,
-      description: 'Target Group ARN',
-      exportName: 'BookManagementTargetGroupARN',
     });
 
     // Output the security group IDs

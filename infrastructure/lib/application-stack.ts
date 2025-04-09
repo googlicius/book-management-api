@@ -50,6 +50,14 @@ export class ApplicationStack extends cdk.Stack {
       port: 3000,
       targets: [fargateService],
       protocol: elbv2.ApplicationProtocol.HTTP,
+      healthCheck: {
+        path: '/health',
+        healthyHttpCodes: '200',
+        healthyThresholdCount: 2,
+        unhealthyThresholdCount: 2,
+        timeout: cdk.Duration.seconds(5),
+        interval: cdk.Duration.seconds(30),
+      },
     });
 
     // Set up auto scaling
