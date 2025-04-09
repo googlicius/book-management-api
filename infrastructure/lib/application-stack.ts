@@ -42,13 +42,14 @@ export class ApplicationStack extends cdk.Stack {
       taskDefinition,
       desiredCount: 1,
       securityGroups: [infrastructureStack.fargateSecurityGroup],
-      vpcSubnets: {
-        subnetType: ec2.SubnetType.PUBLIC,
-      },
+      assignPublicIp: true,
     });
 
-    // Register the Fargate service with the ALB target group
-    fargateService.attachToApplicationTargetGroup(infrastructureStack.targetGroup);
+    // Add the Fargate service as a target to the HTTPS listener
+    infrastructureStack.httpsListener.addTargets('BookManagementServiceTarget', {
+      port: 3000,
+      targets: [fargateService],
+    });
 
     // Set up auto scaling
     const scaling = fargateService.autoScaleTaskCount({
