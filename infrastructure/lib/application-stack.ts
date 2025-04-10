@@ -4,7 +4,7 @@ import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
 import { InfrastructureStack } from './infrastructure-stack';
-import { secrets } from '../scripts/load-secrets';
+import { loadSecrets } from '../scripts/load-secrets';
 
 export class ApplicationStack extends cdk.Stack {
   constructor(
@@ -24,7 +24,7 @@ export class ApplicationStack extends cdk.Stack {
     // Add container to the task definition
     const container = taskDefinition.addContainer('BookManagementContainer', {
       image: ecs.ContainerImage.fromEcrRepository(infrastructureStack.repository),
-      environment: secrets,
+      environment: loadSecrets(),
       logging: ecs.LogDrivers.awsLogs({
         streamPrefix: 'book-management-api'
       }),
@@ -43,10 +43,7 @@ export class ApplicationStack extends cdk.Stack {
       taskDefinition,
       desiredCount: 1,
       securityGroups: [infrastructureStack.fargateSecurityGroup],
-      // assignPublicIp: true,
-      vpcSubnets: {
-        subnetType: ec2.SubnetType.PUBLIC,
-      },
+      assignPublicIp: true,
     });
 
     // Add the Fargate service as a target to the HTTPS listener
